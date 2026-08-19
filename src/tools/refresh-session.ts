@@ -7,7 +7,7 @@ export function registerRefreshSessionTool(
   client: ApiClient,
 ): void {
   server.tool(
-    "refresh_session",
+    "tracker_refresh_session",
     "Re-authenticate with the tracker (refresh JWT cookie)",
     {},
     async () => {

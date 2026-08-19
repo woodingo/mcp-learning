@@ -2,7 +2,7 @@
 
 ## О проекте
 
-MCP-сервер на Node.js + TypeScript. Реализует протокол Model Context Protocol (MCP) с tool `hello`, tool `refresh_session`, resource `greeting://hello` и API-клиентом для корпоративного трекера задач. Использует stdio-транспорт.
+MCP-сервер на Node.js + TypeScript. Реализует протокол Model Context Protocol (MCP) с tools для корпоративного трекера задач (`tracker_list_projects`, `tracker_get_project`, `tracker_refresh_session`). Использует stdio-транспорт.
 
 ## Структура проекта
 
@@ -16,11 +16,13 @@ mcp-learning/
 │   │   └── api-client.ts       # HTTP-клиент с cookie-авторизацией
 │   ├── tools/
 │   │   ├── index.ts            # registerAllTools(server, client)
-│   │   ├── hello.ts            # Tool: hello
-│   │   └── refresh-session.ts  # Tool: refresh_session
+│   │   ├── refresh-session.ts  # Tool: tracker_refresh_session
+│   │   └── tracker/
+│   │       ├── index.ts        # registerTrackerTools(server, client)
+│   │       ├── list-projects.ts # Tool: tracker_list_projects
+│   │       └── get-project.ts  # Tool: tracker_get_project
 │   └── resources/
-│       ├── index.ts            # registerAllResources(server)
-│       └── greeting.ts         # Resource: greeting://hello
+│       └── index.ts            # registerAllResources(server) — заглушка
 ├── build/                      # Скомпилированный JS (сгенерирован tsc)
 ├── docs/
 │   ├── architecture.md         # Архитектура и структура
@@ -67,8 +69,8 @@ mcp-learning/
 
 ## Добавление нового Tool
 
-1. Создайте файл `src/tools/my-tool.ts` с функцией `registerMyTool(server, client)`
-2. Зарегистрируйте в `src/tools/index.ts`
+1. Создайте файл `src/tools/tracker/my-tool.ts` с функцией `registerMyTool(server, client)`
+2. Зарегистрируйте в `src/tools/tracker/index.ts`
 3. `npm run build` — перекомпилируйте
 4. `npm run inspector` — проверьте в UI
 

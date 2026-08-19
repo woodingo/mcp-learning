@@ -20,11 +20,11 @@
 
 ## Зарегистрированные эндпоинты
 
-<!-- Заполняйте по мере добавления tools -->
-
 | Tool | Метод | Путь | Описание |
 |------|-------|------|----------|
-| `refresh_session` | POST | `/api/v1/auth/login` | Авторизация по login/password, получение JWT-cookie |
+| `tracker_refresh_session` | POST | `/api/v1/auth/login` | Авторизация по login/password, получение JWT-cookie |
+| `tracker_list_projects` | GET | `/api/v1/project` | Список проектов с фильтрацией |
+| `tracker_get_project` | GET | `/api/v1/project/{projectId}` | Детали проекта по ID |
 
 ## Эндпоинт авторизации
 
@@ -39,17 +39,41 @@ Response headers contain `Set-Cookie: authorization=Basic%20{JWT}`.
 
 JWT используется для авторизации последующих запросов. Срок жизни — 7 дней.
 
+## Эндпоинт: список проектов
+
+**GET** `/api/v1/project`
+
+Параметры (все optional, передаются как query string):
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `name` | string | Фильтр по имени проекта |
+| `pageSize` | number | Размер страницы (по умолчанию 20) |
+| `currentPage` | number | Номер страницы (по умолчанию 1) |
+| `fields` | string | Поля через запятую (по умолчанию `name,statusId,createdAt`) |
+
+## Эндпоинт: детали проекта
+
+**GET** `/api/v1/project/{projectId}`
+
+Параметры:
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `projectId` | number | ID проекта (path parameter) |
+
 ## Шаблон: новый tool
 
 ```typescript
-// src/tools/my-tool.ts
+// src/tools/tracker/my-tool.ts
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { ApiClient } from "../client/api-client.js";
+import { ApiClient } from "../../client/api-client.js";
 
 export function registerMyTool(server: McpServer, client: ApiClient): void {
   server.tool(
-    "my-tool",
+    "tracker_my_tool",
+    "Описание tool",
     {
       param: z.string().describe("Описание параметра"),
     },
@@ -68,13 +92,14 @@ export function registerMyTool(server: McpServer, client: ApiClient): void {
 }
 ```
 
-Не забудьте зарегистрировать tool в `src/tools/index.ts`:
+Не забудьте зарегистрировать tool в `src/tools/tracker/index.ts`:
 
 ```typescript
 import { registerMyTool } from "./my-tool.js";
 
-export function registerAllTools(server: McpServer, client: ApiClient): void {
-  registerHelloTool(server);
+export function registerTrackerTools(server: McpServer, client: ApiClient): void {
+  registerTrackerListProjects(server, client);
+  registerTrackerGetProject(server, client);
   registerMyTool(server, client);
 }
 ```

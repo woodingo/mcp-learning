@@ -1,0 +1,15 @@
+[Unit]
+Description=MCP Learning Server
+After=network.target
+
+[Service]
+Type=simple
+User=woody
+WorkingDirectory=/home/woody/Reps/temp/mcp-learning
+ExecStart=/usr/bin/node /home/woody/Reps/temp/mcp-learning/build/index.js
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

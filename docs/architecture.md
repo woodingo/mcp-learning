@@ -15,12 +15,22 @@
 ```
 mcp-learning/
 ├── src/
-│   └── index.ts          # MCP-сервер (единственный файл с логикой)
-├── build/                # Скомпилированный JS (сгенерирован tsc)
-├── docs/                 # Документация
+│   ├── index.ts                # Точка входа: main()
+│   ├── server.ts               # Создание McpServer, подключение транспорта
+│   ├── config.ts               # TRACKER_BASE_URL, TRACKER_COOKIE из env
+│   ├── client/
+│   │   └── api-client.ts       # HTTP-клиент с cookie-авторизацией
+│   ├── tools/
+│   │   ├── index.ts            # registerAllTools(server, client)
+│   │   └── hello.ts            # Tool: hello
+│   └── resources/
+│       ├── index.ts            # registerAllResources(server)
+│       └── greeting.ts         # Resource: greeting://hello
+├── build/                      # Скомпилированный JS (сгенерирован tsc)
+├── docs/                       # Документация
 ├── package.json
 ├── tsconfig.json
-└── mcp-server.service    # Systemd unit для автозапуска
+└── mcp-server.service          # Systemd unit для автозапуска
 ```
 
 ## Как работает MCP-сервер
@@ -68,24 +78,8 @@ Resource — это данные, которые клиент может про�
 
 ### Новый Tool
 
-```typescript
-server.tool(
-  "tool-name",
-  { param: z.string().describe("Описание параметра") },
-  async ({ param }) => ({
-    content: [{ type: "text" as const, text: `Результат: ${param}` }],
-  })
-);
-```
+Создайте `src/tools/my-tool.ts` и зарегистрируйте в `src/tools/index.ts`. Подробности: [docs/task-tracker-api.md](./task-tracker-api.md), [docs/development.md](./development.md).
 
 ### Новый Resource
 
-```typescript
-server.resource("name", "scheme://path", async (uri) => ({
-  contents: [{
-    uri: uri.href,
-    mimeType: "text/plain",
-    text: "Содержимое ресурса",
-  }],
-}));
-```
+Создайте `src/resources/my-resource.ts` и зарегистрируйте в `src/resources/index.ts`.

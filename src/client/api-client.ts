@@ -1,6 +1,7 @@
 export class ApiClient {
   private baseUrl: string;
   private cookie: string;
+  private credentials: { login: string; password: string } | null = null;
 
   constructor(baseUrl: string, cookie: string) {
     this.baseUrl = baseUrl;
@@ -9,6 +10,10 @@ export class ApiClient {
 
   get isAuthenticated(): boolean {
     return this.cookie !== "";
+  }
+
+  setCredentials(login: string, password: string): void {
+    this.credentials = { login, password };
   }
 
   async login(login: string, password: string): Promise<void> {
@@ -41,6 +46,39 @@ export class ApiClient {
     this.cookie = authCookie.split(";")[0];
   }
 
+  private async ensureAuthenticated(): Promise<void> {
+    if (this.cookie) {
+      return;
+    }
+    if (this.credentials) {
+      await this.login(this.credentials.login, this.credentials.password);
+      return;
+    }
+    throw new Error(
+      "Not authenticated. Call the tracker_refresh_session tool to log in.",
+    );
+  }
+
+  private async rawFetch(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<Response> {
+    const url = `${this.baseUrl}${path}`;
+    const headers: Record<string, string> = {
+      Cookie: this.cookie,
+    };
+    if (body !== undefined) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    return fetch(url, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  }
+
   private async request(
     method: string,
     path: string,
@@ -51,25 +89,16 @@ export class ApiClient {
         "TRACKER_BASE_URL is not set. Configure the environment variable to use tracker tools.",
       );
     }
-    if (!this.cookie) {
-      throw new Error(
-        "Not authenticated. Call refresh_session or set TRACKER_COOKIE.",
-      );
-    }
 
-    const url = `${this.baseUrl}${path}`;
-    const headers: Record<string, string> = {
-      Cookie: this.cookie,
-    };
-    if (body !== undefined) {
-      headers["Content-Type"] = "application/json";
-    }
+    await this.ensureAuthenticated();
 
-    const response = await fetch(url, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    let response = await this.rawFetch(method, path, body);
+
+    if (response.status === 401 && this.credentials) {
+      this.cookie = "";
+      await this.ensureAuthenticated();
+      response = await this.rawFetch(method, path, body);
+    }
 
     if (!response.ok) {
       const text = await response.text().catch(() => "");

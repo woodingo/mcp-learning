@@ -1,0 +1,113 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { ApiClient } from "../../client/api-client.js";
+
+const STATUS_TO_COLUMN: Record<number, string> = {
+  1: "New",
+  2: "Develop",
+  3: "Develop",
+  4: "Code Review",
+  5: "Code Review",
+  6: "QA",
+  7: "QA",
+  8: "Done",
+};
+
+const PRIORITY_MAP: Record<number, string> = {
+  1: "critical",
+  2: "high",
+  3: "medium",
+  4: "low",
+  5: "lowest",
+};
+
+const EXCLUDED_STATUSES = new Set([9, 10]);
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, "");
+}
+
+interface Task {
+  id: number;
+  name: string;
+  description?: string;
+  prioritiesId?: number;
+  statusId?: number;
+  projectId?: number;
+  project?: { name?: string };
+  author?: { fullNameRu?: string };
+}
+
+interface TaskOutput {
+  id: number;
+  name: string;
+  description: string;
+  project: string;
+  priority: string;
+  author: string;
+}
+
+export function registerMyTasksResource(
+  server: McpServer,
+  client: ApiClient,
+): void {
+  server.resource(
+    "my-tasks",
+    "tracker://tasks/my",
+    async (_uri, _extra) => {
+      try {
+        // Fetch my tasks with fields that trigger nested objects (project, author)
+        const TASK_FIELDS = "id,name,statusId,prioritiesId,description,projectId,prefix,factExecutionTime,plannedExecutionTime,sprintId,typeId";
+        const tasksResponse = (await client.get(
+          `/api/v1/task?isOnlyMine=true&fields=${TASK_FIELDS}`,
+        )) as { data?: Task[] };
+        const tasks: Task[] = tasksResponse?.data ?? [];
+
+        const columns: Record<string, TaskOutput[]> = {
+          New: [],
+          Develop: [],
+          "Code Review": [],
+          QA: [],
+          Done: [],
+        };
+
+        for (const task of tasks) {
+          if (task.statusId === undefined || EXCLUDED_STATUSES.has(task.statusId)) {
+            continue;
+          }
+
+          const column = STATUS_TO_COLUMN[task.statusId];
+          if (!column) continue;
+
+          columns[column].push({
+            id: task.id,
+            name: task.name,
+            description: task.description ? stripHtml(task.description) : "",
+            project: task.project?.name ?? "",
+            priority: PRIORITY_MAP[task.prioritiesId ?? 0] ?? "unknown",
+            author: task.author?.fullNameRu ?? "",
+          });
+        }
+
+        return {
+          contents: [
+            {
+              uri: "tracker://tasks/my",
+              mimeType: "application/json",
+              text: JSON.stringify(columns, null, 2),
+            },
+          ],
+        };
+      } catch {
+        return {
+          contents: [
+            {
+              uri: "tracker://tasks/my",
+              mimeType: "text/plain",
+              text: "Not authenticated or credentials are invalid. Use the tracker_refresh_session tool to log in, then read this resource again.",
+            },
+          ],
+        };
+      }
+    },
+  );
+}

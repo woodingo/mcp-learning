@@ -1,5 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { ApiClient } from "../client/api-client.js";
+import { registerTrackerResources } from "./tracker/index.js";
 
-export function registerAllResources(_server: McpServer): void {
-  // No resources registered yet
+export function registerAllResources(
+  server: McpServer,
+  client: ApiClient,
+): void {
+  registerTrackerResources(server, client);
 }

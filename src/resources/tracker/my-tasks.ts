@@ -44,6 +44,7 @@ interface TaskOutput {
   project: string;
   priority: string;
   author: string;
+  url: string;
 }
 
 export function registerMyTasksResource(
@@ -85,6 +86,9 @@ export function registerMyTasksResource(
             project: task.project?.name ?? "",
             priority: PRIORITY_MAP[task.prioritiesId ?? 0] ?? "unknown",
             author: task.author?.fullNameRu ?? "",
+            url: task.projectId
+              ? `http://track.nordclan/projects/${task.projectId}/tasks/${task.id}`
+              : "",
           });
         }
 

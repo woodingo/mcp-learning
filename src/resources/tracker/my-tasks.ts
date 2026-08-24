@@ -35,6 +35,7 @@ interface Task {
   projectId?: number;
   project?: { name?: string };
   author?: { fullNameRu?: string };
+  createdAt?: string;
 }
 
 interface TaskOutput {
@@ -45,6 +46,7 @@ interface TaskOutput {
   priority: string;
   author: string;
   url: string;
+  createdAt: string;
 }
 
 export function registerMyTasksResource(
@@ -57,7 +59,7 @@ export function registerMyTasksResource(
     async (_uri, _extra) => {
       try {
         // Fetch my tasks with fields that trigger nested objects (project, author)
-        const TASK_FIELDS = "id,name,statusId,prioritiesId,description,projectId,prefix,factExecutionTime,plannedExecutionTime,sprintId,typeId";
+        const TASK_FIELDS = "id,name,statusId,prioritiesId,description,projectId,prefix,factExecutionTime,plannedExecutionTime,sprintId,typeId,createdAt";
         const tasksResponse = (await client.get(
           `/api/v1/task?isOnlyMine=true&fields=${TASK_FIELDS}`,
         )) as { data?: Task[] };
@@ -89,6 +91,7 @@ export function registerMyTasksResource(
             url: task.projectId
               ? `http://track.nordclan/projects/${task.projectId}/tasks/${task.id}`
               : "",
+            createdAt: task.createdAt ?? "",
           });
         }
 

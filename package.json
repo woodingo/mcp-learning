@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node -r dotenv/config build/index.js",
+    "start:http": "node -r dotenv/config build/http.js",
     "inspector": "npx @modelcontextprotocol/inspector node build/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,6 +18,7 @@
     "dotenv": "^17.4.2"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
     "@types/node": "^26.2.0",
     "typescript": "^7.0.2"
   }

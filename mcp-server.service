@@ -6,10 +6,11 @@ After=network.target
 Type=simple
 User=woody
 WorkingDirectory=/home/woody/Reps/temp/mcp-learning
-ExecStart=/usr/bin/node /home/woody/Reps/temp/mcp-learning/build/index.js
+ExecStart=/home/woody/.nvm/versions/node/v22.21.1/bin/node /home/woody/Reps/temp/mcp-learning/build/http.js
 Restart=on-failure
 RestartSec=5
 Environment=NODE_ENV=production
+EnvironmentFile=/home/woody/Reps/temp/mcp-learning/.env
 
 [Install]
 WantedBy=multi-user.target

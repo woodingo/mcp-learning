@@ -17,10 +17,11 @@ After=network.target
 Type=simple
 User=woody
 WorkingDirectory=/home/woody/Reps/temp/mcp-learning
-ExecStart=/usr/bin/node /home/woody/Reps/temp/mcp-learning/build/index.js
+ExecStart=/usr/bin/node /home/woody/Reps/temp/mcp-learning/build/http.js
 Restart=on-failure
 RestartSec=5
 Environment=NODE_ENV=production
+EnvironmentFile=/home/woody/Reps/temp/mcp-learning/.env
 
 [Install]
 WantedBy=multi-user.target
@@ -90,9 +91,9 @@ sudo systemctl status mcp-server
 
 ### Сервис не запускается
 
-1. Проверьте, что `build/index.js` существует:
+1. Проверьте, что `build/http.js` существует:
    ```bash
-   ls -la build/index.js
+   ls -la build/http.js
    ```
 
 2. Проверьте логи:

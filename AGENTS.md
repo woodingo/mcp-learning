@@ -2,16 +2,17 @@
 
 ## О проекте
 
-MCP-сервер на Node.js + TypeScript. Реализует протокол Model Context Protocol (MCP) с tools для корпоративного трекера задач (`tracker_list_projects`, `tracker_get_project`, `tracker_refresh_session`). Использует stdio-транспорт.
+MCP-сервер на Node.js + TypeScript. Реализует протокол Model Context Protocol (MCP) с tools для корпоративного трекера задач (`tracker_list_projects`, `tracker_get_project`, `tracker_refresh_session`). Два режима: stdio для локальной разработки, HTTP для сетевого доступа.
 
 ## Структура проекта
 
 ```
 mcp-learning/
 ├── src/
-│   ├── index.ts                # Точка входа: main()
+│   ├── index.ts                # Точка входа: main() — stdio режим
+│   ├── http.ts                 # Точка входа: HTTP режим с API-ключом
 │   ├── server.ts               # Создание McpServer, подключение транспорта
-│   ├── config.ts               # TRACKER_BASE_URL, TRACKER_LOGIN, TRACKER_PASSWORD из env
+│   ├── config.ts               # TRACKER_BASE_URL, TRACKER_LOGIN, TRACKER_PASSWORD, MCP_API_KEY из env
 │   ├── client/
 │   │   └── api-client.ts       # HTTP-клиент с cookie-авторизацией
 │   ├── tools/
@@ -42,6 +43,7 @@ mcp-learning/
 | `npm install` | Установка зависимостей |
 | `npm run build` | Компиляция TypeScript |
 | `npm start` | Запуск сервера (stdio) |
+| `npm run start:http` | Запуск HTTP-сервера (порт 3000) |
 | `npm run inspector` | Запуск веб-UI для тестирования |
 
 ## Документация
@@ -66,6 +68,9 @@ mcp-learning/
 | `TRACKER_BASE_URL` | Базовый URL трекера | `http://track.nordclan` |
 | `TRACKER_LOGIN` | Логин | `andrew.yudin` |
 | `TRACKER_PASSWORD` | Пароль | `***` |
+| `MCP_API_KEY` | API-ключ для HTTP-режима | `my-secret-key` |
+| `MCP_PORT` | Порт HTTP-сервера | `3000` |
+| `MCP_HOST` | Хост HTTP-сервера | `0.0.0.0` |
 
 ## Добавление нового Tool
 

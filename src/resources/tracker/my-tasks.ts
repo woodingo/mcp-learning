@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ApiClient } from "../../client/api-client.js";
+import { registerResourceWithTool } from "../resource-tool-factory.js";
 
 const STATUS_TO_COLUMN: Record<number, string> = {
   1: "New",
@@ -49,72 +50,59 @@ interface TaskOutput {
   createdAt: string;
 }
 
+export async function fetchMyTasks(
+  client: ApiClient,
+): Promise<Record<string, TaskOutput[]>> {
+  const TASK_FIELDS =
+    "id,name,statusId,prioritiesId,description,projectId,prefix,factExecutionTime,plannedExecutionTime,sprintId,typeId,createdAt";
+  const tasksResponse = (await client.get(
+    `/api/v1/task?isOnlyMine=true&fields=${TASK_FIELDS}`,
+  )) as { data?: Task[] };
+  const tasks: Task[] = tasksResponse?.data ?? [];
+
+  const columns: Record<string, TaskOutput[]> = {
+    New: [],
+    Develop: [],
+    "Code Review": [],
+    QA: [],
+    Done: [],
+  };
+
+  for (const task of tasks) {
+    if (
+      task.statusId === undefined ||
+      EXCLUDED_STATUSES.has(task.statusId)
+    ) {
+      continue;
+    }
+
+    const column = STATUS_TO_COLUMN[task.statusId];
+    if (!column) continue;
+
+    columns[column].push({
+      id: task.id,
+      name: task.name,
+      description: task.description ? stripHtml(task.description) : "",
+      project: task.project?.name ?? "",
+      priority: PRIORITY_MAP[task.prioritiesId ?? 0] ?? "unknown",
+      author: task.author?.fullNameRu ?? "",
+      url: task.projectId
+        ? `http://track.nordclan/projects/${task.projectId}/tasks/${task.id}`
+        : "",
+      createdAt: task.createdAt ?? "",
+    });
+  }
+
+  return columns;
+}
+
 export function registerMyTasksResource(
   server: McpServer,
   client: ApiClient,
 ): void {
-  server.resource(
-    "my-tasks",
-    "tracker://tasks/my",
-    async (_uri, _extra) => {
-      try {
-        // Fetch my tasks with fields that trigger nested objects (project, author)
-        const TASK_FIELDS = "id,name,statusId,prioritiesId,description,projectId,prefix,factExecutionTime,plannedExecutionTime,sprintId,typeId,createdAt";
-        const tasksResponse = (await client.get(
-          `/api/v1/task?isOnlyMine=true&fields=${TASK_FIELDS}`,
-        )) as { data?: Task[] };
-        const tasks: Task[] = tasksResponse?.data ?? [];
-
-        const columns: Record<string, TaskOutput[]> = {
-          New: [],
-          Develop: [],
-          "Code Review": [],
-          QA: [],
-          Done: [],
-        };
-
-        for (const task of tasks) {
-          if (task.statusId === undefined || EXCLUDED_STATUSES.has(task.statusId)) {
-            continue;
-          }
-
-          const column = STATUS_TO_COLUMN[task.statusId];
-          if (!column) continue;
-
-          columns[column].push({
-            id: task.id,
-            name: task.name,
-            description: task.description ? stripHtml(task.description) : "",
-            project: task.project?.name ?? "",
-            priority: PRIORITY_MAP[task.prioritiesId ?? 0] ?? "unknown",
-            author: task.author?.fullNameRu ?? "",
-            url: task.projectId
-              ? `http://track.nordclan/projects/${task.projectId}/tasks/${task.id}`
-              : "",
-            createdAt: task.createdAt ?? "",
-          });
-        }
-
-        return {
-          contents: [
-            {
-              uri: "tracker://tasks/my",
-              mimeType: "application/json",
-              text: JSON.stringify(columns, null, 2),
-            },
-          ],
-        };
-      } catch {
-        return {
-          contents: [
-            {
-              uri: "tracker://tasks/my",
-              mimeType: "text/plain",
-              text: "Not authenticated or credentials are invalid. Use the tracker_refresh_session tool to log in, then read this resource again.",
-            },
-          ],
-        };
-      }
-    },
-  );
+  registerResourceWithTool(server, client, {
+    name: "my-tasks",
+    uri: "tracker://tasks/my",
+    fetcher: fetchMyTasks,
+  });
 }

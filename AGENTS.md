@@ -2,7 +2,9 @@
 
 ## О проекте
 
-MCP-сервер на Node.js + TypeScript. Реализует протокол Model Context Protocol (MCP) с tools для корпоративного трекера задач (`tracker_list_projects`, `tracker_get_project`, `tracker_refresh_session`). Два режима: stdio для локальной разработки, HTTP для сетевого доступа.
+MCP-сервер на Node.js + TypeScript. Реализует протокол Model Context Protocol (MCP) с tools для корпоративного трекера задач. Два режима: stdio для локальной разработки, HTTP для сетевого доступа.
+
+Каждый ресурс (tracker://tasks/my, tracker://projects, tracker://team/members) автоматически дублируется как tool через фабрику `registerResourceWithTool()` — это необходимо, т.к. некоторые клиенты (LibreChat) не поддерживают ресурсы.
 
 ## Структура проекта
 
@@ -17,13 +19,17 @@ mcp-learning/
 │   │   └── api-client.ts       # HTTP-клиент с cookie-авторизацией
 │   ├── tools/
 │   │   ├── index.ts            # registerAllTools(server, client)
-│   │   ├── refresh-session.ts  # Tool: tracker_refresh_session
 │   │   └── tracker/
 │   │       ├── index.ts        # registerTrackerTools(server, client)
-│   │       ├── list-projects.ts # Tool: tracker_list_projects
-│   │       └── get-project.ts  # Tool: tracker_get_project
+│   │       └── create-task.ts  # Tool: tracker_create_task
 │   └── resources/
-│       └── index.ts            # registerAllResources(server) — заглушка
+│       ├── index.ts            # registerAllResources(server, client)
+│       ├── resource-tool-factory.ts  # Фабрика: ресурс + tool из одного fetcher'а
+│       └── tracker/
+│           ├── index.ts        # registerTrackerResources(server, client)
+│           ├── my-tasks.ts     # Resource: tracker://tasks/my, Tool: tracker_get_tasks_my
+│           ├── projects.ts     # Resource: tracker://projects, Tool: tracker_get_projects
+│           └── team-members.ts # Resource: tracker://team/members, Tool: tracker_get_team_members
 ├── build/                      # Скомпилированный JS (сгенерирован tsc)
 ├── docs/
 │   ├── architecture.md         # Архитектура и структура
@@ -72,11 +78,43 @@ mcp-learning/
 | `MCP_PORT` | Порт HTTP-сервера | `3000` |
 | `MCP_HOST` | Хост HTTP-сервера | `0.0.0.0` |
 
+## Текущие tools
+
+| Tool | Источник | Описание |
+|------|----------|----------|
+| `tracker_get_tasks_my` | resource factory | Мои задачи по колонкам доски |
+| `tracker_get_projects` | resource factory | Список всех проектов |
+| `tracker_get_team_members` | resource factory | Участники команды |
+| `tracker_create_task` | standalone tool | Создание задачи |
+
 ## Добавление нового Tool
 
 1. Создайте файл `src/tools/tracker/my-tool.ts` с функцией `registerMyTool(server, client)`
 2. Зарегистрируйте в `src/tools/tracker/index.ts`
 3. `npm run build` — перекомпилируйте
 4. `npm run inspector` — проверьте в UI
+5. **Обновите документацию** (docs/task-tracker-api.md, docs/architecture.md, AGENTS.md)
 
 Подробнее: [docs/development.md](docs/development.md), [docs/task-tracker-api.md](docs/task-tracker-api.md)
+
+## Добавление нового Resource + Tool
+
+1. Создайте файл `src/resources/tracker/my-data.ts` с fetcher + `registerMyDataResource()`
+2. Зарегистрируйте в `src/resources/tracker/index.ts`
+3. `npm run build` — перекомпилируйте
+4. `npm run inspector` — проверьте в UI
+5. **Обновите документацию** (docs/task-tracker-api.md, docs/architecture.md, AGENTS.md)
+
+Подробнее: [docs/development.md](docs/development.md)
+
+## Правило обновления документации
+
+**При добавлении или изменении логики (tools, resources, API-эндпоинтов, архитектуры) необходимо обновлять документацию:**
+
+| Что изменилось | Какие файлы обновлять |
+|----------------|----------------------|
+| Новый tool / resource | `docs/architecture.md`, `docs/task-tracker-api.md`, `AGENTS.md` |
+| Новый API-эндпоинт трекера | `docs/task-tracker-api.md` |
+| Изменение архитектуры | `docs/architecture.md` |
+| Новая команда / env-переменная | `docs/development.md`, `AGENTS.md` |
+| Фабрика / паттерн регистрации | `docs/development.md` |

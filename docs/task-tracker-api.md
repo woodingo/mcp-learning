@@ -18,51 +18,72 @@
 4. Найдите запрос → Copy as cURL
 5. Скиньте cURL агенту — он создаст tool на основе запроса
 
-## Зарегистрированные эндпоинты
+## Зарегистрированные tools
 
-| Tool | Метод | Путь | Описание |
-|------|-------|------|----------|
-| `tracker_refresh_session` | POST | `/api/v1/auth/login` | Авторизация по login/password, получение JWT-cookie |
-| `tracker_list_projects` | GET | `/api/v1/project` | Список проектов с фильтрацией |
-| `tracker_get_project` | GET | `/api/v1/project/{projectId}` | Детали проекта по ID |
+| Tool | Источник | Метод | Путь | Описание |
+|------|----------|-------|------|----------|
+| `tracker_get_tasks_my` | resource factory | GET | `/api/v1/task?isOnlyMine=true` | Мои задачи по колонкам доски |
+| `tracker_get_projects` | resource factory | GET | `/api/v1/project-all` | Список всех проектов |
+| `tracker_get_team_members` | resource factory | GET | `/api/v1/user/roles?status=true&departments=36` | Участники команды (активные) |
+| `tracker_create_task` | standalone tool | POST | `/api/v1/project/{projectId}/task` | Создание задачи |
 
-## Эндпоинт авторизации
+Все tools из resource factory используют один fetcher с ресурсом. Имя tool выводится автоматически из URI (`tracker://tasks/my` → `tracker_get_tasks_my`).
 
-**POST** `/api/v1/auth/login`
+## Эндпоинт: мои задачи
 
-Request body:
-```json
-{ "login": "your_login", "password": "your_password" }
-```
+**GET** `/api/v1/task`
 
-Response headers contain `Set-Cookie: authorization=Basic%20{JWT}`.
-
-JWT используется для авторизации последующих запросов. Срок жизни — 7 дней.
-
-## Эндпоинт: список проектов
-
-**GET** `/api/v1/project`
-
-Параметры (все optional, передаются как query string):
+Параметры (query string):
 
 | Параметр | Тип | Описание |
 |----------|-----|----------|
-| `name` | string | Фильтр по имени проекта |
-| `pageSize` | number | Размер страницы (по умолчанию 20) |
-| `currentPage` | number | Номер страницы (по умолчанию 1) |
-| `fields` | string | Поля через запятую (по умолчанию `name,statusId,createdAt`) |
+| `isOnlyMine` | boolean | Только мои задачи |
+| `fields` | string | Поля через запятую |
 
-## Эндпоинт: детали проекта
+Возвращает задачи, сгруппированные по колонкам доски: New, Develop, Code Review, QA, Done. Статусы 9 (Canceled) и 10 (Closed) исключены.
 
-**GET** `/api/v1/project/{projectId}`
+## Эндпоинт: все проекты
 
-Параметры:
+**GET** `/api/v1/project-all`
+
+Без параметров. Возвращает массив `{ id, name }`.
+
+## Эндпоинт: участники команды
+
+**GET** `/api/v1/user/roles`
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `status` | boolean | Статус участника |
+| `departments` | number | ID департамента (36 — наш) |
+
+Фильтрация по `active === 1` на клиенте. Возвращает массив `{ id, fullNameRu }`.
+
+## Эндпоинт: создание задачи
+
+**POST** `/api/v1/project/{projectId}/task`
 
 | Параметр | Тип | Описание |
 |----------|-----|----------|
 | `projectId` | number | ID проекта (path parameter) |
 
-## Шаблон: новый tool
+Request body:
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `name` | string | Название задачи |
+| `description` | string | HTML-описание |
+| `performerId` | number | ID исполнителя |
+| `statusId` | number | Статус (1 = New) |
+| `typeId` | number | Тип (1 = task, 2 = bug) |
+| `prioritiesId` | number | Приоритет (1-5, по умолчанию 3) |
+| `sprintId` | null | Спринт |
+| `plannedExecutionTime` | number | Планируемое время |
+| `isTaskByClient` | boolean | Задача от клиента |
+| `isDevOps` | boolean | DevOps-задача |
+| `deadline` | null | Дедлайн |
+
+## Шаблон: новый tool (standalone)
 
 ```typescript
 // src/tools/tracker/my-tool.ts
@@ -92,14 +113,35 @@ export function registerMyTool(server: McpServer, client: ApiClient): void {
 }
 ```
 
-Не забудьте зарегистрировать tool в `src/tools/tracker/index.ts`:
+Не забудьте зарегистрировать tool в `src/tools/tracker/index.ts`.
+
+## Шаблон: новый resource + tool (через фабрику)
 
 ```typescript
-import { registerMyTool } from "./my-tool.js";
+// src/resources/tracker/my-data.ts
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { ApiClient } from "../../client/api-client.js";
+import { registerResourceWithTool } from "../resource-tool-factory.js";
 
-export function registerTrackerTools(server: McpServer, client: ApiClient): void {
-  registerTrackerListProjects(server, client);
-  registerTrackerGetProject(server, client);
-  registerMyTool(server, client);
+export async function fetchMyData(client: ApiClient): Promise<MyDataItem[]> {
+  const response = (await client.get("/api/v1/my-data")) as
+    | MyDataItem[]
+    | { data?: MyDataItem[] };
+
+  const items: MyDataItem[] = Array.isArray(response)
+    ? response
+    : response?.data ?? [];
+
+  return items.map((item) => ({ id: item.id, name: item.name }));
+}
+
+export function registerMyDataResource(server: McpServer, client: ApiClient): void {
+  registerResourceWithTool(server, client, {
+    name: "my-data",
+    uri: "tracker://my/data",
+    fetcher: fetchMyData,
+  });
 }
 ```
+
+Не забудьте зарегистрировать в `src/resources/tracker/index.ts` и обновить документацию.

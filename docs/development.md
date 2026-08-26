@@ -36,27 +36,86 @@ npm install
 ## Процесс разработки
 
 1. Внесите изменения в `src/`
-2. Запустите `npm run build`
-3. Запустите `npm run inspector` для проверки в веб-интерфейсе
-4. Или `npm start` для запуска в консоли
+2. **Обновите документацию** (см. раздел ниже)
+3. Запустите `npm run build`
+4. Запустите `npm run inspector` для проверки в веб-интерфейсе
+5. Или `npm start` для запуска в консоли
 
-## Как добавить новый Tool
+## Как добавить новый Resource + Tool
 
-1. Создайте файл `src/tools/my-tool.ts`:
+Используйте фабрику `registerResourceWithTool()` — она регистрирует и MCP resource, и tool из одного fetcher'а. Это необходимо, т.к. некоторые клиенты (LibreChat и др.) не поддерживают ресурсы.
+
+1. Создайте файл `src/resources/tracker/my-data.ts`:
+
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { ApiClient } from "../../client/api-client.js";
+import { registerResourceWithTool } from "../resource-tool-factory.js";
+
+interface MyDataItem {
+  id: number;
+  name: string;
+}
+
+export async function fetchMyData(
+  client: ApiClient,
+): Promise<MyDataItem[]> {
+  const response = (await client.get("/api/v1/my-data")) as
+    | MyDataItem[]
+    | { data?: MyDataItem[] };
+
+  const items: MyDataItem[] = Array.isArray(response)
+    ? response
+    : response?.data ?? [];
+
+  return items.map((item) => ({ id: item.id, name: item.name }));
+}
+
+export function registerMyDataResource(
+  server: McpServer,
+  client: ApiClient,
+): void {
+  registerResourceWithTool(server, client, {
+    name: "my-data",            // имя ресурса
+    uri: "tracker://my/data",   // URI ресурса
+    fetcher: fetchMyData,       // функция получения данных
+  });
+}
+```
+
+2. Зарегистрируйте в `src/resources/tracker/index.ts`:
+
+```typescript
+import { registerMyDataResource } from "./my-data.js";
+
+export function registerTrackerResources(server: McpServer, client: ApiClient): void {
+  registerMyDataResource(server, client);
+}
+```
+
+3. `npm run build` — перекомпилируйте
+4. `npm run inspector` — убедитесь, что resource и tool появились в UI
+
+Имя tool выводится автоматически из URI: `tracker://my/data` → `tracker_get_my_data`. Чтобы переопределить, передайте `toolName` и/или `toolDescription` в opts.
+
+## Как добавить новый Tool (без ресурса)
+
+1. Создайте файл `src/tools/tracker/my-tool.ts`:
 
 ```typescript
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { ApiClient } from "../client/api-client.js";
+import { ApiClient } from "../../client/api-client.js";
 
 export function registerMyTool(server: McpServer, client: ApiClient): void {
   server.tool(
-    "my-tool",                          // уникальное имя
-    {                                    // параметры (Zod-схемы)
-      input: z.string().describe("Входные данные"),
+    "tracker_my_tool",
+    "Описание tool",
+    {
+      param: z.string().describe("Описание параметра"),
     },
-    async ({ input }) => {             // обработчик
-      const result = await client.get(`/api/endpoint/${input}`);
+    async ({ param }) => {
+      const result = await client.get(`/api/path/${param}`);
       return {
         content: [
           {
@@ -70,13 +129,12 @@ export function registerMyTool(server: McpServer, client: ApiClient): void {
 }
 ```
 
-2. Зарегистрируйте в `src/tools/index.ts`:
+2. Зарегистрируйте в `src/tools/tracker/index.ts`:
 
 ```typescript
 import { registerMyTool } from "./my-tool.js";
 
-export function registerAllTools(server: McpServer, client: ApiClient): void {
-  registerHelloTool(server);
+export function registerTrackerTools(server: McpServer, client: ApiClient): void {
   registerMyTool(server, client);
 }
 ```
@@ -86,23 +144,19 @@ export function registerAllTools(server: McpServer, client: ApiClient): void {
 
 Подробнее: [docs/task-tracker-api.md](./task-tracker-api.md)
 
-## Как добавить новый Resource
+## Обновление документации
 
-```typescript
-server.resource(
-  "my-resource",            // имя ресурса
-  "my-scheme://path",       // URI
-  async (uri) => ({
-    contents: [
-      {
-        uri: uri.href,
-        mimeType: "application/json",
-        text: JSON.stringify({ key: "value" }),
-      },
-    ],
-  })
-);
-```
+**При добавлении или изменении логики (tools, resources, API-эндпоинтов, архитектуры) необходимо обновлять документацию:**
+
+| Что изменилось | Какие файлы обновлять |
+|----------------|----------------------|
+| Новый tool / resource | `docs/architecture.md` (структура файлов, таблица tools/resources), `docs/task-tracker-api.md` (таблица эндпоинтов), `AGENTS.md` (структура файлов) |
+| Новый API-эндпоинт трекера | `docs/task-tracker-api.md` (описание эндпоинта) |
+| Изменение архитектуры | `docs/architecture.md` |
+| Новая команда / env-переменная | `docs/development.md`, `AGENTS.md` |
+| Фабрика / паттерн регистрации | `docs/development.md` (раздел "Как добавить") |
+
+Не обновлённая документация ведёт к ошибкам агентов и разработчиков, работающих с проектом.
 
 ## Как запустить Inspector для отладки
 

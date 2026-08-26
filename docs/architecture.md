@@ -24,10 +24,17 @@ mcp-learning/
 │   │   └── api-client.ts       # HTTP-клиент с cookie-авторизацией
 │   ├── tools/
 │   │   ├── index.ts            # registerAllTools(server, client)
-│   │   └── hello.ts            # Tool: hello
+│   │   └── tracker/
+│   │       ├── index.ts        # registerTrackerTools(server, client)
+│   │       └── create-task.ts  # Tool: tracker_create_task
 │   └── resources/
-│       ├── index.ts            # registerAllResources(server)
-│       └── greeting.ts         # Resource: greeting://hello
+│       ├── index.ts            # registerAllResources(server, client)
+│       ├── resource-tool-factory.ts  # Фабрика: ресурс + tool из одного fetcher'а
+│       └── tracker/
+│           ├── index.ts        # registerTrackerResources(server, client)
+│           ├── my-tasks.ts     # Resource: tracker://tasks/my, Tool: tracker_get_tasks_my
+│           ├── projects.ts     # Resource: tracker://projects, Tool: tracker_get_projects
+│           └── team-members.ts # Resource: tracker://team/members, Tool: tracker_get_team_members
 ├── build/                      # Скомпилированный JS (сгенерирован tsc)
 ├── docs/                       # Документация
 ├── package.json
@@ -65,21 +72,26 @@ mcp-learning/
 - Если `MCP_API_KEY` не задан — auth пропускается (dev-режим)
 - `GET /health` всегда доступен без auth
 
-### Tool (инструмент)
+### Ресурсы и инструменты
 
-Tool — это функция, которую клиент может вызвать. Сервер предоставляет tool `hello`:
+Для каждого ресурса автоматически создаётся дублирующий tool (\LibreChat и др. клиенты не поддерживают ресурсы). Оба используют один и тот же fetcher-обработчик через фабрику `registerResourceWithTool()`.
 
-- **Имя:** `hello`
-- **Параметры:** `name` (string, необязательный) — имя для приветствия
-- **Возвращает:** текстовое приветствие
+| Ресурс | Tool | Описание |
+|--------|------|----------|
+| `tracker://tasks/my` | `tracker_get_tasks_my` | Мои задачи по колонкам доски |
+| `tracker://projects` | `tracker_get_projects` | Список всех проектов |
+| `tracker://team/members` | `tracker_get_team_members` | Участники команды |
+| — | `tracker_create_task` | Создание задачи (standalone tool) |
 
-### Resource (ресурс)
+### Фабрика ресурсов и инструментов
 
-Resource — это данные, которые клиент может прочитать. Сервер предоставляет ресурс:
+`src/resources/resource-tool-factory.ts` — функция `registerResourceWithTool()` принимает:
+- `name` — имя ресурса
+- `uri` — URI ресурса
+- `fetcher` — async-функция `(client) => Promise<unknown>`
+- Необязательные: `toolName` (override имени tool), `toolDescription`
 
-- **URI:** `greeting://hello`
-- **Содержимое:** текст "Hello, World!"
-- **MIME-тип:** text/plain
+Имя tool выводится автоматически из URI: `tracker://tasks/my` → `tracker_get_tasks_my`.
 
 ## Схема взаимодействия
 
@@ -90,12 +102,13 @@ Resource — это данные, которые клиент может про�
 │   Inspector)    │                        │                  │
 └─────────────────┘                        └────────┬─────────┘
                                                     │
-                                          ┌─────────┴─────────┐
-                                          │                   │
-                                    ┌─────▼─────┐     ┌──────▼──────┐
-                                    │   Tool    │     │  Resource   │
-                                    │  (hello)  │     │ (greeting)  │
-                                    └───────────┘     └─────────────┘
+                                      ┌─────────────┴──────────────┐
+                                      │                            │
+                                ┌─────▼─────┐              ┌──────▼──────┐
+                                │ Resources │              │    Tools    │
+                                │ + Tools   │              │(create_task)│
+                                │ (factory) │              └─────────────┘
+                                └───────────┘
 
 ┌─────────────────┐    HTTP (port 3000)    ┌──────────────────┐
 │  MCP-клиенты    │◄──────────────────────►│  MCP-сервер      │
@@ -103,20 +116,40 @@ Resource — это данные, которые клиент может про�
 │   сетевые)      │  Authorization: Bearer │                  │
 └─────────────────┘  mcp-session-id: uuid  └────────┬─────────┘
                                                      │
-                                           ┌─────────┴─────────┐
-                                           │                   │
-                                     ┌─────▼─────┐     ┌──────▼──────┐
-                                     │   Tool    │     │  Resource   │
-                                     │  (hello)  │     │ (greeting)  │
-                                     └───────────┘     └─────────────┘
+                                       ┌─────────────┴──────────────┐
+                                       │                            │
+                                 ┌─────▼─────┐              ┌──────▼──────┐
+                                 │ Resources │              │    Tools    │
+                                 │ + Tools   │              │(create_task)│
+                                 │ (factory) │              └─────────────┘
+                                 └───────────┘
 ```
 
 ## Добавление нового компонента
 
-### Новый Tool
+### Новый Resource + Tool (рекомендуется)
 
-Создайте `src/tools/my-tool.ts` и зарегистрируйте в `src/tools/index.ts`. Подробности: [docs/task-tracker-api.md](./task-tracker-api.md), [docs/development.md](./development.md).
+Используйте фабрику — она регистрирует и resource, и tool из одного fetcher'а:
 
-### Новый Resource
+```typescript
+// src/resources/tracker/my-data.ts
+import { registerResourceWithTool } from "../resource-tool-factory.js";
 
-Создайте `src/resources/my-resource.ts` и зарегистрируйте в `src/resources/index.ts`.
+export async function fetchMyData(client: ApiClient): Promise<MyData[]> {
+  // логика получения данных
+}
+
+export function registerMyDataResource(server: McpServer, client: ApiClient): void {
+  registerResourceWithTool(server, client, {
+    name: "my-data",
+    uri: "tracker://my/data",
+    fetcher: fetchMyData,
+  });
+}
+```
+
+Зарегистрируйте в `src/resources/tracker/index.ts`. Подробности: [docs/development.md](./development.md).
+
+### Новый Tool (без ресурса)
+
+Создайте `src/tools/tracker/my-tool.ts` и зарегистрируйте в `src/tools/tracker/index.ts`.

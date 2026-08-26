@@ -7,6 +7,7 @@
     "build": "tsc",
     "start": "node -r dotenv/config build/index.js",
     "start:http": "node -r dotenv/config build/http.js",
+    "deploy": "npm run build && sudo systemctl daemon-reload && sudo systemctl restart mcp-server",
     "inspector": "npx @modelcontextprotocol/inspector node build/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

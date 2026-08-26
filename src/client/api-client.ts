@@ -125,4 +125,8 @@ export class ApiClient {
   patch(path: string, body?: unknown): Promise<unknown> {
     return this.request("PATCH", path, body);
   }
+
+  put(path: string, body?: unknown): Promise<unknown> {
+    return this.request("PUT", path, body);
+  }
 }

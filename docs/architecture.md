@@ -26,7 +26,8 @@ mcp-learning/
 │   │   ├── index.ts            # registerAllTools(server, client)
 │   │   └── tracker/
 │   │       ├── index.ts        # registerTrackerTools(server, client)
-│   │       └── create-task.ts  # Tool: tracker_create_task
+│   │       ├── create-task.ts  # Tool: tracker_create_task
+│   │       └── transfer-task.ts # Tool: tracker_transfer_task
 │   └── resources/
 │       ├── index.ts            # registerAllResources(server, client)
 │       ├── resource-tool-factory.ts  # Фабрика: ресурс + tool из одного fetcher'а
@@ -82,6 +83,7 @@ mcp-learning/
 | `tracker://projects` | `tracker_get_projects` | Список всех проектов |
 | `tracker://team/members` | `tracker_get_team_members` | Участники команды |
 | — | `tracker_create_task` | Создание задачи (standalone tool) |
+| — | `tracker_transfer_task` | Перевод задачи в новый статус (standalone tool) |
 
 ### Фабрика ресурсов и инструментов
 

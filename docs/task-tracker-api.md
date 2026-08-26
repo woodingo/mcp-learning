@@ -26,6 +26,7 @@
 | `tracker_get_projects` | resource factory | GET | `/api/v1/project-all` | Список всех проектов |
 | `tracker_get_team_members` | resource factory | GET | `/api/v1/user/roles?status=true&departments=36` | Участники команды (активные) |
 | `tracker_create_task` | standalone tool | POST | `/api/v1/project/{projectId}/task` | Создание задачи |
+| `tracker_transfer_task` | standalone tool | PUT | `/api/v1/project/{projectId}/task/{taskId}` | Перевод задачи в новый статус / смена исполнителя |
 
 Все tools из resource factory используют один fetcher с ресурсом. Имя tool выводится автоматически из URI (`tracker://tasks/my` → `tracker_get_tasks_my`).
 
@@ -82,6 +83,25 @@ Request body:
 | `isTaskByClient` | boolean | Задача от клиента |
 | `isDevOps` | boolean | DevOps-задача |
 | `deadline` | null | Дедлайн |
+
+## Эндпоинт: перевод задачи
+
+**PUT** `/api/v1/project/{projectId}/task/{taskId}`
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `projectId` | number | ID проекта (path parameter) |
+| `taskId` | number | ID задачи (path parameter) |
+
+Request body:
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `id` | number | ID задачи |
+| `performerId` | number | ID исполнителя (0 = без исполнителя) |
+| `statusId` | number | Статус (1=New, 2=Develop, 4=Code Review, 6=QA, 8=Done) |
+
+Возвращает массив с одним обновлённым DTO задачи.
 
 ## Шаблон: новый tool (standalone)
 

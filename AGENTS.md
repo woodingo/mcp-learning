@@ -86,6 +86,7 @@ mcp-learning/
 | `tracker_get_projects` | resource factory | Список всех проектов |
 | `tracker_get_team_members` | resource factory | Участники команды |
 | `tracker_create_task` | standalone tool | Создание задачи |
+| `tracker_transfer_task` | standalone tool | Перевод задачи в новый статус |
 
 ## Добавление нового Tool
 

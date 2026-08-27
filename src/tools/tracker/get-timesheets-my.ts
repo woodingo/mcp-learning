@@ -8,6 +8,7 @@ interface TimesheetEntry {
   onDate: string;
   spentTime: string;
   task?: { id: number; name: string };
+  project?: { id: number };
 }
 
 export function registerGetTimesheetsMyTool(
@@ -49,6 +50,7 @@ export function registerGetTimesheetsMyTool(
         date: e.onDate,
         taskName: e.task?.name ?? "",
         taskId: e.task?.id ?? null,
+        projectId: e.project?.id ?? null,
         spentTime: e.spentTime,
       }));
 

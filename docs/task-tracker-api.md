@@ -9,6 +9,7 @@
 | `TRACKER_BASE_URL` | Базовый URL трекера | `http://track.nordclan` |
 | `TRACKER_LOGIN` | Логин | `andrew.yudin` |
 | `TRACKER_PASSWORD` | Пароль | `***` |
+| `TRACKER_USER_ID` | ID пользователя для timesheets | `336` |
 
 ## Как находить эндпоинты
 
@@ -26,6 +27,8 @@
 | `tracker_get_projects` | resource factory | GET | `/api/v1/project-all` | Список всех проектов |
 | `tracker_get_team_members` | resource factory | GET | `/api/v1/user/roles?status=true&departments=36` | Участники команды (активные) |
 | `tracker_create_task` | standalone tool | POST | `/api/v1/project/{projectId}/task` | Создание задачи |
+| `tracker_get_task` | standalone tool | GET | `/api/v1/project/{projectId}/task/{taskId}` | Детальная информация о задаче |
+| `tracker_get_timesheets_my` | standalone tool | GET | `/api/v1/timesheet` | Отчёты по времени за период |
 | `tracker_transfer_task` | standalone tool | PUT | `/api/v1/project/{projectId}/task/{taskId}` | Перевод задачи в новый статус / смена исполнителя |
 
 Все tools из resource factory используют один fetcher с ресурсом. Имя tool выводится автоматически из URI (`tracker://tasks/my` → `tracker_get_tasks_my`).
@@ -83,6 +86,31 @@ Request body:
 | `isTaskByClient` | boolean | Задача от клиента |
 | `isDevOps` | boolean | DevOps-задача |
 | `deadline` | null | Дедлайн |
+
+Возвращает DTO задачи ( taskId, name, type, status, priority, performer, author, project, parentId, url, createdAt).
+
+## Эндпоинт: детали задачи
+
+**GET** `/api/v1/project/{projectId}/task/{taskId}`
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `projectId` | number | ID проекта (path parameter) |
+| `taskId` | number | ID задачи (path parameter) |
+
+Возвращает полный DTO задачи с полями: id, name, type, status, description, priority, performer, author, project, parentId, url, createdAt.
+
+## Эндпоинт: timesheets
+
+**GET** `/api/v1/timesheet`
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `userId` | number | ID пользователя (из env `TRACKER_USER_ID`) |
+| `dateBegin` | string | Дата начала (YYYY-MM-DD) |
+| `dateEnd` | string | Дата окончания (YYYY-MM-DD) |
+
+Возвращает массив записей timesheet. Tool возвращает упрощённый массив: `{ date, spentTime, taskId }`.
 
 ## Эндпоинт: перевод задачи
 

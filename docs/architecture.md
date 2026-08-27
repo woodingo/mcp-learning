@@ -27,12 +27,15 @@ mcp-learning/
 │   │   └── tracker/
 │   │       ├── index.ts        # registerTrackerTools(server, client)
 │   │       ├── create-task.ts  # Tool: tracker_create_task
+│   │       ├── get-task.ts     # Tool: tracker_get_task
+│   │       ├── get-timesheets-my.ts # Tool: tracker_get_timesheets_my
 │   │       └── transfer-task.ts # Tool: tracker_transfer_task
 │   └── resources/
 │       ├── index.ts            # registerAllResources(server, client)
 │       ├── resource-tool-factory.ts  # Фабрика: ресурс + tool из одного fetcher'а
 │       └── tracker/
 │           ├── index.ts        # registerTrackerResources(server, client)
+│           ├── task-dto.ts     # Shared DTO: TaskOutput, STATUS_MAP, PRIORITY_MAP, toTaskOutput()
 │           ├── my-tasks.ts     # Resource: tracker://tasks/my, Tool: tracker_get_tasks_my
 │           ├── projects.ts     # Resource: tracker://projects, Tool: tracker_get_projects
 │           └── team-members.ts # Resource: tracker://team/members, Tool: tracker_get_team_members
@@ -83,6 +86,8 @@ mcp-learning/
 | `tracker://projects` | `tracker_get_projects` | Список всех проектов |
 | `tracker://team/members` | `tracker_get_team_members` | Участники команды |
 | — | `tracker_create_task` | Создание задачи (standalone tool) |
+| — | `tracker_get_task` | Детальная информация о задаче (standalone tool) |
+| — | `tracker_get_timesheets_my` | Отчёты по времени за период (standalone tool) |
 | — | `tracker_transfer_task` | Перевод задачи в новый статус (standalone tool) |
 
 ### Фабрика ресурсов и инструментов

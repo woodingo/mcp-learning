@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { ApiClient } from "../../client/api-client.js";
+import { toTaskOutput, type RawTask } from "../../resources/tracker/task-dto.js";
 
 export function registerCreateTaskTool(
   server: McpServer,
@@ -51,11 +52,13 @@ export function registerCreateTaskTool(
       };
 
       const result = await client.post(`/api/v1/project/${projectId}/task`, body);
+      const raw = (Array.isArray(result) ? result[0] : result) as RawTask;
+      const output = toTaskOutput(raw);
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(result, null, 2),
+            text: JSON.stringify(output, null, 2),
           },
         ],
       };

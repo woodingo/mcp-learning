@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ApiClient } from "../../client/api-client.js";
 import { registerResourceWithTool } from "../resource-tool-factory.js";
+import { PRIORITY_MAP, stripHtml, buildTaskUrl } from "./task-dto.js";
 
 const STATUS_TO_COLUMN: Record<number, string> = {
   1: "New",
@@ -13,21 +14,9 @@ const STATUS_TO_COLUMN: Record<number, string> = {
   8: "Done",
 };
 
-const PRIORITY_MAP: Record<number, string> = {
-  1: "critical",
-  2: "high",
-  3: "medium",
-  4: "low",
-  5: "lowest",
-};
-
 const EXCLUDED_STATUSES = new Set([9, 10]);
 
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, "");
-}
-
-interface Task {
+interface ListTask {
   id: number;
   name: string;
   description?: string;
@@ -57,8 +46,8 @@ export async function fetchMyTasks(
     "id,name,statusId,prioritiesId,description,projectId,prefix,factExecutionTime,plannedExecutionTime,sprintId,typeId,createdAt";
   const tasksResponse = (await client.get(
     `/api/v1/task?isOnlyMine=true&fields=${TASK_FIELDS}`,
-  )) as { data?: Task[] };
-  const tasks: Task[] = tasksResponse?.data ?? [];
+  )) as { data?: ListTask[] };
+  const tasks: ListTask[] = tasksResponse?.data ?? [];
 
   const columns: Record<string, TaskOutput[]> = {
     New: [],
@@ -86,9 +75,7 @@ export async function fetchMyTasks(
       project: task.project?.name ?? "",
       priority: PRIORITY_MAP[task.prioritiesId ?? 0] ?? "unknown",
       author: task.author?.fullNameRu ?? "",
-      url: task.projectId
-        ? `http://track.nordclan/projects/${task.projectId}/tasks/${task.id}`
-        : "",
+      url: task.projectId ? buildTaskUrl(task.projectId, task.id) : "",
       createdAt: task.createdAt ?? "",
     });
   }

@@ -14,19 +14,23 @@ mcp-learning/
 │   ├── index.ts                # Точка входа: main() — stdio режим
 │   ├── http.ts                 # Точка входа: HTTP режим с API-ключом
 │   ├── server.ts               # Создание McpServer, подключение транспорта
-│   ├── config.ts               # TRACKER_BASE_URL, TRACKER_LOGIN, TRACKER_PASSWORD, MCP_API_KEY из env
+│   ├── config.ts               # TRACKER_BASE_URL, TRACKER_LOGIN, TRACKER_PASSWORD, TRACKER_USER_ID, MCP_API_KEY из env
 │   ├── client/
 │   │   └── api-client.ts       # HTTP-клиент с cookie-авторизацией
 │   ├── tools/
 │   │   ├── index.ts            # registerAllTools(server, client)
 │   │   └── tracker/
 │   │       ├── index.ts        # registerTrackerTools(server, client)
-│   │       └── create-task.ts  # Tool: tracker_create_task
+│   │       ├── create-task.ts  # Tool: tracker_create_task
+│   │       ├── get-task.ts     # Tool: tracker_get_task
+│   │       ├── get-timesheets-my.ts # Tool: tracker_get_timesheets_my
+│   │       └── transfer-task.ts # Tool: tracker_transfer_task
 │   └── resources/
 │       ├── index.ts            # registerAllResources(server, client)
 │       ├── resource-tool-factory.ts  # Фабрика: ресурс + tool из одного fetcher'а
 │       └── tracker/
 │           ├── index.ts        # registerTrackerResources(server, client)
+│           ├── task-dto.ts     # Shared DTO: TaskOutput, STATUS_MAP, PRIORITY_MAP, toTaskOutput()
 │           ├── my-tasks.ts     # Resource: tracker://tasks/my, Tool: tracker_get_tasks_my
 │           ├── projects.ts     # Resource: tracker://projects, Tool: tracker_get_projects
 │           └── team-members.ts # Resource: tracker://team/members, Tool: tracker_get_team_members
@@ -74,6 +78,7 @@ mcp-learning/
 | `TRACKER_BASE_URL` | Базовый URL трекера | `http://track.nordclan` |
 | `TRACKER_LOGIN` | Логин | `andrew.yudin` |
 | `TRACKER_PASSWORD` | Пароль | `***` |
+| `TRACKER_USER_ID` | ID пользователя для timesheets | `336` |
 | `MCP_API_KEY` | API-ключ для HTTP-режима | `my-secret-key` |
 | `MCP_PORT` | Порт HTTP-сервера | `3000` |
 | `MCP_HOST` | Хост HTTP-сервера | `0.0.0.0` |
@@ -86,6 +91,8 @@ mcp-learning/
 | `tracker_get_projects` | resource factory | Список всех проектов |
 | `tracker_get_team_members` | resource factory | Участники команды |
 | `tracker_create_task` | standalone tool | Создание задачи |
+| `tracker_get_task` | standalone tool | Детальная информация о задаче |
+| `tracker_get_timesheets_my` | standalone tool | Отчёты по времени за период |
 | `tracker_transfer_task` | standalone tool | Перевод задачи в новый статус |
 
 ## Добавление нового Tool

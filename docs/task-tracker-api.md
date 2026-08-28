@@ -30,6 +30,8 @@
 | `tracker_get_task` | standalone tool | GET | `/api/v1/project/{projectId}/task/{taskId}` | Детальная информация о задаче |
 | `tracker_get_timesheets_my` | standalone tool | GET | `/api/v1/timesheet` | Отчёты по времени за период |
 | `tracker_transfer_task` | standalone tool | PUT | `/api/v1/project/{projectId}/task/{taskId}` | Перевод задачи в новый статус / смена исполнителя |
+| `tracker_log_time` | standalone tool | POST | `/api/v1/timesheet` | Списание времени на задачу |
+| `get_current_time` | standalone tool | — | — | Текущая дата и время сервера |
 
 Все tools из resource factory используют один fetcher с ресурсом. Имя tool выводится автоматически из URI (`tracker://tasks/my` → `tracker_get_tasks_my`).
 
@@ -130,6 +132,24 @@ Request body:
 | `statusId` | number | Статус (1=New, 2=Develop, 4=Code Review, 6=QA, 8=Done) |
 
 Возвращает массив с одним обновлённым DTO задачи.
+
+## Эндпоинт: списание времени
+
+**POST** `/api/v1/timesheet`
+
+Request body:
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `isDraft` | boolean | Черновик (всегда `false`) |
+| `taskId` | number | ID задачи |
+| `typeId` | string | Тип записи (всегда `"1"`) |
+| `spentTime` | number | Затраченное время в часах |
+| `onDate` | string | Дата в формате YYYY-MM-DD |
+| `projectId` | number | ID проекта |
+| `sprintId` | null | Спринт (всегда `null`) |
+
+Создаёт запись в журнале работ по задаче.
 
 ## Шаблон: новый tool (standalone)
 

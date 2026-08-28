@@ -24,11 +24,13 @@ mcp-learning/
 │   │   └── api-client.ts       # HTTP-клиент с cookie-авторизацией
 │   ├── tools/
 │   │   ├── index.ts            # registerAllTools(server, client)
+│   │   ├── get-current-time.ts # Tool: get_current_time
 │   │   └── tracker/
 │   │       ├── index.ts        # registerTrackerTools(server, client)
 │   │       ├── create-task.ts  # Tool: tracker_create_task
 │   │       ├── get-task.ts     # Tool: tracker_get_task
 │   │       ├── get-timesheets-my.ts # Tool: tracker_get_timesheets_my
+│   │       ├── log-time.ts     # Tool: tracker_log_time
 │   │       └── transfer-task.ts # Tool: tracker_transfer_task
 │   └── resources/
 │       ├── index.ts            # registerAllResources(server, client)
@@ -89,6 +91,7 @@ mcp-learning/
 | — | `tracker_get_task` | Детальная информация о задаче (standalone tool) |
 | — | `tracker_get_timesheets_my` | Отчёты по времени за период (standalone tool) |
 | — | `tracker_transfer_task` | Перевод задачи в новый статус (standalone tool) |
+| — | `tracker_log_time` | Списание времени на задачу (standalone tool) |
 
 ### Фабрика ресурсов и инструментов
 

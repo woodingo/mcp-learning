@@ -19,6 +19,7 @@ mcp-learning/
 │   │   └── api-client.ts       # HTTP-клиент с cookie-авторизацией
 │   ├── tools/
 │   │   ├── index.ts            # registerAllTools(server, client)
+│   │   ├── get-current-time.ts # Tool: get_current_time
 │   │   └── tracker/
 │   │       ├── index.ts        # registerTrackerTools(server, client)
 │   │       ├── create-task.ts  # Tool: tracker_create_task
@@ -94,6 +95,8 @@ mcp-learning/
 | `tracker_get_task` | standalone tool | Детальная информация о задаче |
 | `tracker_get_timesheets_my` | standalone tool | Отчёты по времени за период |
 | `tracker_transfer_task` | standalone tool | Перевод задачи в новый статус |
+| `tracker_log_time` | standalone tool | Списание времени на задачу |
+| `get_current_time` | standalone tool | Текущая дата и время сервера |
 
 ## Добавление нового Tool
 

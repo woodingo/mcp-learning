@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ApiClient } from "../../client/api-client.js";
 import { registerCreateTaskTool } from "./create-task.js";
+import { registerGetCurrentUserTool } from "./get-current-user.js";
 import { registerGetTaskTool } from "./get-task.js";
 import { registerGetTimesheetsMyTool } from "./get-timesheets-my.js";
 import { registerLogTimeTool } from "./log-time.js";
@@ -11,6 +12,7 @@ export function registerTrackerTools(
   client: ApiClient,
 ): void {
   registerCreateTaskTool(server, client);
+  registerGetCurrentUserTool(server, client);
   registerGetTaskTool(server, client);
   registerGetTimesheetsMyTool(server, client);
   registerLogTimeTool(server, client);

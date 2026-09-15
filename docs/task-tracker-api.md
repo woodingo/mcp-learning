@@ -27,6 +27,7 @@
 | `tracker_get_projects` | resource factory | GET | `/api/v1/project-all` | Список всех проектов |
 | `tracker_get_team_members` | resource factory | GET | `/api/v1/user/roles?status=true&departments=36` | Участники команды (активные) |
 | `tracker_create_task` | standalone tool | POST | `/api/v1/project/{projectId}/task` | Создание задачи |
+| `tracker_get_current_user` | standalone tool | GET | `/api/v1/user/me` | Информация о текущем залогиненном пользователе |
 | `tracker_get_task` | standalone tool | GET | `/api/v1/project/{projectId}/task/{taskId}` | Детальная информация о задаче |
 | `tracker_get_timesheets_my` | standalone tool | GET | `/api/v1/timesheet` | Отчёты по времени за период |
 | `tracker_transfer_task` | standalone tool | PUT | `/api/v1/project/{projectId}/task/{taskId}` | Перевод задачи в новый статус / смена исполнителя |
@@ -90,6 +91,30 @@ Request body:
 | `deadline` | null | Дедлайн |
 
 Возвращает DTO задачи ( taskId, name, type, status, priority, performer, author, project, parentId, url, createdAt).
+
+## Эндпоинт: текущий пользователь
+
+**GET** `/api/v1/user/me`
+
+Без параметров. Идентификация по cookie-авторизации.
+
+Возвращает информацию о текущем залогиненном пользователе. Tool возвращает подмножество полей:
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `id` | number | ID пользователя |
+| `fullNameRu` | string | ФИО (рус.) |
+| `fullNameEn` | string | ФИО (англ.) |
+| `emailPrimary` | string | Рабочий email |
+| `telegram` | string | Telegram |
+| `phone` | string | Рабочий телефон |
+| `mobile` | string | Мобильный телефон |
+| `company` | string | Компания |
+| `department` | string | Отдел |
+| `city` | string | Город |
+| `globalRole` | string | Глобальная роль (например, "VISOR") |
+| `isActive` | boolean | Активен ли пользователь |
+| `employmentDate` | string | Дата трудоустройства (ISO) |
 
 ## Эндпоинт: детали задачи
 

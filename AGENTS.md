@@ -23,6 +23,7 @@ mcp-learning/
 │   │   └── tracker/
 │   │       ├── index.ts        # registerTrackerTools(server, client)
 │   │       ├── create-task.ts  # Tool: tracker_create_task
+│   │       ├── get-current-user.ts # Tool: tracker_get_current_user
 │   │       ├── get-task.ts     # Tool: tracker_get_task
 │   │       ├── get-timesheets-my.ts # Tool: tracker_get_timesheets_my
 │   │       └── transfer-task.ts # Tool: tracker_transfer_task
@@ -92,6 +93,7 @@ mcp-learning/
 | `tracker_get_projects` | resource factory | Список всех проектов |
 | `tracker_get_team_members` | resource factory | Участники команды |
 | `tracker_create_task` | standalone tool | Создание задачи |
+| `tracker_get_current_user` | standalone tool | Информация о текущем залогиненном пользователе |
 | `tracker_get_task` | standalone tool | Детальная информация о задаче |
 | `tracker_get_timesheets_my` | standalone tool | Отчёты по времени за период |
 | `tracker_transfer_task` | standalone tool | Перевод задачи в новый статус |

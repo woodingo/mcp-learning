@@ -24,6 +24,7 @@ npm install
 | `TRACKER_BASE_URL` | Базовый URL трекера | — |
 | `TRACKER_LOGIN` | Логин трекера | — |
 | `TRACKER_PASSWORD` | Пароль трекера | — |
+| `TRACKER_USER_ID` | ID пользователя в трекере (число) | — |
 
 ### HTTP-режим
 

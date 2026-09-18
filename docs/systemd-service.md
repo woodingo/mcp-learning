@@ -6,33 +6,24 @@ Systemd — система инициализации в Debian/Ubuntu. Service-
 
 ## Файл сервиса
 
-Файл `mcp-server.service` уже создан в корне проекта:
+Файл `mcp-server.service` уже создан в корне проекта. Перед установкой замените плейсхолдеры `<USER>` и `<PROJECT_DIR>` на свои значения:
 
-```ini
-[Unit]
-Description=MCP Learning Server
-After=network.target
-
-[Service]
-Type=simple
-User=woody
-WorkingDirectory=/home/woody/Reps/temp/mcp-learning
-ExecStart=/usr/bin/node /home/woody/Reps/temp/mcp-learning/build/http.js
-Restart=on-failure
-RestartSec=5
-Environment=NODE_ENV=production
-EnvironmentFile=/home/woody/Reps/temp/mcp-learning/.env
-
-[Install]
-WantedBy=multi-user.target
+```bash
+sed -e 's/<USER>/'$USER'/g' -e 's|<PROJECT_DIR>|'"$(pwd)"'|g' mcp-server.service > /tmp/mcp-server.service
 ```
 
 ## Установка сервиса
 
-1. Скопируйте файл в системную директорию:
+1. Сгенерируйте файл с подставленными путями:
 
 ```bash
-sudo cp mcp-server.service /etc/systemd/system/
+sed -e 's/<USER>/'$USER'/g' -e 's|<PROJECT_DIR>|'"$(pwd)"'|g' mcp-server.service > /tmp/mcp-server.service
+```
+
+2. Скопируйте файл в системную директорию:
+
+```bash
+sudo cp /tmp/mcp-server.service /etc/systemd/system/
 ```
 
 2. Перезагрузите конфигурацию systemd:

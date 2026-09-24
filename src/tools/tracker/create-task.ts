@@ -34,8 +34,12 @@ export function registerCreateTaskTool(
         .max(5)
         .default(3)
         .describe("Приоритет: 1=высший, 5=низший (по умолчанию 3)"),
+      parentId: z
+        .number()
+        .optional()
+        .describe("ID родительской задачи (для подзадач)"),
     },
-    async ({ name, description, projectId, performerId, isBug, prioritiesId }) => {
+    async ({ name, description, projectId, performerId, isBug, prioritiesId, parentId }) => {
       const body = {
         name,
         projectId,
@@ -45,6 +49,7 @@ export function registerCreateTaskTool(
         typeId: isBug ? 2 : 1,
         sprintId: null,
         prioritiesId,
+        parentId: parentId ?? null,
         plannedExecutionTime: 0,
         isTaskByClient: false,
         isDevOps: false,

@@ -89,6 +89,7 @@ Request body:
 | `isTaskByClient` | boolean | Задача от клиента |
 | `isDevOps` | boolean | DevOps-задача |
 | `deadline` | null | Дедлайн |
+| `parentId` | number | ID родительской задачи (необязательно) |
 
 Возвращает DTO задачи ( taskId, name, type, status, priority, performer, author, project, parentId, url, createdAt).
 
